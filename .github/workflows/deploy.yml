@@ -8,6 +8,7 @@
 #   AWS_DEPLOY_ROLE_ARN  arn:aws:iam::<account>:role/GitHubActions-gde-example-deploy
 #   EC2_INSTANCE_ID      i-xxxxxxxxxxxxxxxxx
 name: Build & Deploy
+run-name: "${{ github.event_name == 'pull_request' && 'Test' || 'Deploy' }}: ${{ github.event.head_commit.message || github.event.pull_request.title || 'manual run' }}"
 
 on:
   push:
