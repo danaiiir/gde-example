@@ -13,10 +13,6 @@ run-name: "${{ github.event_name == 'pull_request' && 'Test' || 'Deploy' }}: ${{
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "**.md"
-      - "iam/**"
-      - ".gitignore"
   pull_request:
     branches: [main]
   workflow_dispatch:

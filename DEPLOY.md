@@ -168,7 +168,7 @@ Every push to `main` runs [.github/workflows/deploy.yml](.github/workflows/deplo
 2. **Push:** tags the image `git-<commit>` and `latest` and pushes it to ECR.
 3. **Deploy:** runs `scripts/deploy-on-ec2.sh git-<commit>` on the instance through **SSM Run Command**, so port 22 stays closed. If the new container fails its health check, the script **rolls back** to the previous image and the workflow fails.
 
-Pull requests run step 1 only. Pushes that change only `*.md` or `iam/` files are skipped. You can also run the workflow by hand: **Actions → Build & Deploy → Run workflow**.
+Pull requests run step 1 only. Every push to `main` deploys, even one that changes only documentation. You can also run the workflow by hand: **Actions → Build & Deploy → Run workflow**.
 
 ### One-time setup
 
