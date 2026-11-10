@@ -174,6 +174,11 @@ Pull requests run step 1 only. Every push to `main` deploys, even one that chang
 
 GitHub gets temporary AWS credentials through **OIDC**, so no AWS keys are stored in GitHub. The role trusts only pushes to `main` of `danaiiir/gde-example`.
 
+This repository uses GitHub's *immutable* OIDC subject, which includes the owner and repository IDs:
+`repo:danaiiir@263218584/gde-example@1453010912:ref:refs/heads/main`. You can check a repository's format at
+`https://api.github.com/repos/<owner>/<repo>/actions/oidc/customization/sub`. If the trust policy uses the old
+`repo:owner/name:...` format, the AWS login fails with *Not authorized to perform sts:AssumeRoleWithWebIdentity*.
+
 ```bash
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 INSTANCE_ID=i-xxxxxxxxxxxxxxxxx
