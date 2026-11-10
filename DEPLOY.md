@@ -157,3 +157,45 @@ sudo docker pull $REPO:latest && sudo docker rm -f nova && sudo docker run -d --
 docker compose up --build     # http://localhost:8000, uses your ~/.aws (read-only)
 AWS_PROFILE=myprofile docker compose up   # use a non-default profile
 ```
+
+---
+
+## Automatic deployment (GitHub Actions)
+
+Every push to `main` runs [.github/workflows/deploy.yml](.github/workflows/deploy.yml):
+
+1. **Build & test:** checks Python syntax, builds the Docker image, starts it and checks `/healthz`, the login redirect and the protected API.
+2. **Push:** tags the image `git-<commit>` and `latest` and pushes it to ECR.
+3. **Deploy:** runs `scripts/deploy-on-ec2.sh git-<commit>` on the instance through **SSM Run Command**, so port 22 stays closed. If the new container fails its health check, the script **rolls back** to the previous image and the workflow fails.
+
+Pull requests run step 1 only. Pushes that change only `*.md` or `iam/` files are skipped. You can also run the workflow by hand: **Actions → Build & Deploy → Run workflow**.
+
+### One-time setup
+
+GitHub gets temporary AWS credentials through **OIDC**, so no AWS keys are stored in GitHub. The role trusts only pushes to `main` of `danaiiir/gde-example`.
+
+```bash
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+INSTANCE_ID=i-xxxxxxxxxxxxxxxxx
+
+# 1. GitHub OIDC provider (once per AWS account; skip if it already exists)
+aws iam create-open-id-connect-provider --url https://token.actions.githubusercontent.com \
+  --client-id-list sts.amazonaws.com
+
+# 2. Deploy role for GitHub Actions
+sed "s/<ACCOUNT_ID>/$ACCOUNT_ID/g; s/<INSTANCE_ID>/$INSTANCE_ID/g" iam/github-oidc-trust-policy.json > /tmp/trust.json
+sed "s/<ACCOUNT_ID>/$ACCOUNT_ID/g; s/<INSTANCE_ID>/$INSTANCE_ID/g" iam/github-deploy-policy.json   > /tmp/deploy.json
+aws iam create-role --role-name GitHubActions-gde-example-deploy --assume-role-policy-document file:///tmp/trust.json
+aws iam put-role-policy --role-name GitHubActions-gde-example-deploy --policy-name DeployNovaAssistant --policy-document file:///tmp/deploy.json
+
+# 3. Let the instance receive SSM commands
+aws iam attach-role-policy --role-name NovaAssistantEC2Role \
+  --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+```
+
+Then in GitHub, go to **Settings → Secrets and variables → Actions → New repository secret** and add:
+
+| Secret | Value |
+|---|---|
+| `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::<account>:role/GitHubActions-gde-example-deploy` |
+| `EC2_INSTANCE_ID` | `i-xxxxxxxxxxxxxxxxx` |
