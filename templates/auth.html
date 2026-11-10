@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if mode == 'signup' %}Create account{% else %}Log in{% endif %} · Nova</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+</head>
+<body class="auth-body">
+  <main class="auth-card">
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"/></svg>
+    </div>
+
+    {% if mode == 'closed' %}
+      <h1>Sign-up is closed</h1>
+      <p class="auth-sub">New accounts can only be created by an administrator. Ask them to create one for you.</p>
+      <a class="auth-submit auth-link-btn" href="{{ url_for('auth.login') }}">Back to log in</a>
+
+    {% elif mode == 'signup' %}
+      <h1>{% if first_user %}Create the admin account{% else %}Create your account{% endif %}</h1>
+      <p class="auth-sub">
+        {% if first_user %}This is the first account on this server. Existing chats will be moved into it.
+        {% else %}Sign up to start chatting with Nova.{% endif %}
+      </p>
+      {% if error %}<div class="auth-error" role="alert">{{ error }}</div>{% endif %}
+      <form method="post" class="auth-form" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label class="field">
+          <span>Username</span>
+          <input name="username" value="{{ username }}" autocomplete="username" required minlength="3" maxlength="64" autofocus
+                 pattern="[A-Za-z0-9_.@\-]{3,64}">
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <span class="pw-wrap">
+            <input name="password" type="password" autocomplete="new-password" required minlength="8">
+            <button type="button" class="pw-toggle" aria-label="Show password">Show</button>
+          </span>
+          <small>At least 8 characters.</small>
+        </label>
+        <label class="field">
+          <span>Confirm password</span>
+          <input name="confirm" type="password" autocomplete="new-password" required minlength="8">
+        </label>
+        <button class="auth-submit" type="submit">Create account</button>
+      </form>
+      <p class="auth-alt">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+
+    {% else %}
+      <h1>Welcome back</h1>
+      <p class="auth-sub">Log in to continue to Nova.</p>
+      {% if error %}<div class="auth-error" role="alert">{{ error }}</div>{% endif %}
+      <form method="post" class="auth-form" action="{{ url_for('auth.login', next=next) if next else url_for('auth.login') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label class="field">
+          <span>Username</span>
+          <input name="username" value="{{ username }}" autocomplete="username" required autofocus>
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <span class="pw-wrap">
+            <input name="password" type="password" autocomplete="current-password" required>
+            <button type="button" class="pw-toggle" aria-label="Show password">Show</button>
+          </span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="remember" value="1" checked>
+          <span>Keep me logged in for 30 days</span>
+        </label>
+        <button class="auth-submit" type="submit">Log in</button>
+      </form>
+      {% if signup_allowed %}
+        <p class="auth-alt">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up</a></p>
+      {% endif %}
+    {% endif %}
+  </main>
+  <p class="auth-foot">Nova Assistant · powered by Amazon Bedrock</p>
+
+  <script>
+    document.querySelectorAll('.pw-toggle').forEach((btn) => btn.addEventListener('click', () => {
+      const input = btn.previousElementSibling;
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? 'Hide' : 'Show';
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    }));
+    document.querySelectorAll('.auth-form').forEach((f) => f.addEventListener('submit', () => {
+      const b = f.querySelector('.auth-submit'); b.disabled = true; b.textContent = 'Please wait…';
+    }));
+  </script>
+</body>
+</html>

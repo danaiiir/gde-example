@@ -1,0 +1,29 @@
+# LOCAL TESTING ONLY - mounts your local AWS profile read-only into the container.
+# On EC2, do NOT mount credentials: attach an IAM instance profile instead (see DEPLOY.md).
+services:
+  nova:
+    build: .
+    image: nova-assistant:latest
+    ports:
+      - "8000:8000"
+    environment:
+      AWS_REGION: us-east-1
+      AWS_PROFILE: ${AWS_PROFILE:-default}
+      AWS_CONFIG_FILE: /aws/config
+      AWS_SHARED_CREDENTIALS_FILE: /aws/credentials
+      # Auth: first account can always sign up; set true to let anyone register afterwards.
+      ALLOW_SIGNUP: "false"
+      # SESSION_COOKIE_SECURE: "true"   # enable once served over HTTPS
+      # Limits (defaults shown)
+      FREE_MESSAGE_LIMIT: "10"       # model replies per non-admin account
+      MAX_CONTEXT_TOKENS: "8000"     # estimated input tokens sent to the model per request
+      MAX_CONTEXT_MESSAGES: "40"     # max past messages sent per request
+      MAX_INPUT_CHARS: "8000"        # max characters in one user message
+      MAX_TOKENS: "2048"             # max tokens in one model reply
+    volumes:
+      - ${USERPROFILE:-${HOME}}/.aws:/aws:ro
+      - nova-data:/data
+    restart: unless-stopped
+
+volumes:
+  nova-data:

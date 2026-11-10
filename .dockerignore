@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+chat.db*
+data/
+.git/
+.vscode/
+.idea/
+.env
+.aws/
+test_bedrock.py
+Dockerfile
+docker-compose.yml
+*.md
+iam/
+.secret_key

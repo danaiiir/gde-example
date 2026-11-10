@@ -1,0 +1,22 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Local data & secrets — never commit
+chat.db
+chat.db-*
+*.db
+.secret_key
+.env
+.env.*
+.aws/
+*.pem
+data/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
